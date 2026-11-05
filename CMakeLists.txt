@@ -34,7 +34,8 @@ FetchContent_Declare(imgui-sfml
     SYSTEM)
 FetchContent_MakeAvailable(imgui-sfml)
 
-add_executable(Meche src/Main.cpp)
+add_executable(Meche src/Main.cpp
+        src/Vec2.h)
 target_link_libraries(Meche PRIVATE SFML::Graphics ImGui-SFML::ImGui-SFML)
 
 if(MSVC)
