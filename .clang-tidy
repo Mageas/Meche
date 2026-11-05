@@ -1,0 +1,19 @@
+Checks: '-*,readability-identifier-naming'
+HeaderFilterRegex: '/src/'
+CheckOptions:
+  readability-identifier-naming.NamespaceCase: CamelCase
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.EnumConstantCase: CamelCase
+  readability-identifier-naming.FunctionCase: CamelCase
+  readability-identifier-naming.MethodCase: CamelCase
+  readability-identifier-naming.PrivateMemberPrefix: m_
+  readability-identifier-naming.PrivateMemberCase: CamelCase
+  readability-identifier-naming.ProtectedMemberPrefix: m_
+  readability-identifier-naming.ProtectedMemberCase: CamelCase
+  readability-identifier-naming.ClassMemberPrefix: s_
+  readability-identifier-naming.ClassMemberCase: CamelCase
+  readability-identifier-naming.PublicMemberCase: CamelCase
+  readability-identifier-naming.LocalVariableCase: camelBack
+  readability-identifier-naming.ParameterCase: camelBack

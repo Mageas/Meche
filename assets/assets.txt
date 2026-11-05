@@ -1,0 +1,33 @@
+Texture TexPigIdle assets/images/PigIdle.png
+Texture TexPigRun assets/images/PigRun.png
+Texture TexPigJump assets/images/PigJump.png
+Texture TexPigFall assets/images/PigFall.png
+Texture TexBombOn assets/images/BombOn.png
+Texture TexBlast assets/images/Blast.png
+Texture TexBox assets/images/Box.png
+Texture TexBoxHit assets/images/BoxHit.png
+Texture TexDiamond assets/images/Diamond.png
+Texture TexDoor assets/images/Door.png
+Texture TexDoorOpening assets/images/DoorOpening.png
+Texture TexBrick assets/images/Brick.png
+Texture TexFragileWall assets/images/FragileWall.png
+Texture TexBanner assets/images/Banner.png
+Texture TexWindow assets/images/Window.png
+
+Animation PigIdle TexPigIdle 11 6
+Animation PigRun TexPigRun 6 6
+Animation PigJump TexPigJump 1 6
+Animation PigFall TexPigFall 1 6
+Animation BombLit TexBombOn 4 6
+Animation Blast TexBlast 6 6
+Animation Box TexBox 1 6
+Animation BoxHit TexBoxHit 1 6
+Animation Diamond TexDiamond 10 6
+Animation Door TexDoor 1 6
+Animation DoorOpening TexDoorOpening 5 6
+Animation Brick TexBrick 1 6
+Animation FragileWall TexFragileWall 1 6
+Animation Banner TexBanner 1 6
+Animation Window TexWindow 1 6
+
+Font Arial /System/Library/Fonts/Supplemental/Arial.ttf
