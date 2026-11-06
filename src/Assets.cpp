@@ -50,7 +50,12 @@ std::expected<void, std::string> Assets::LoadFromFile(const std::filesystem::pat
 		}
 		else if (keyword == "Font")
 		{
-			file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::string name;
+			std::string path;
+			file >> name >> path;
+
+			if (!m_Fonts[name].openFromFile(path))
+				return std::unexpected(std::format("Font '{}' cannot be opened from '{}'", name, path));
 		}
 		else
 		{

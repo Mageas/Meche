@@ -26,12 +26,14 @@ public:
 
 	void Clear()
 	{
-		m_Textures.clear();
 		m_Animations.clear();
+		m_Textures.clear();
+		m_Fonts.clear();
 	}
 
 	const sf::Texture& GetTexture(const std::string& name) const { return m_Textures.at(name); }
 	const Animation& GetAnimation(const std::string& name) const { return m_Animations.at(name); }
+	const sf::Font& GetFont(const std::string& name) const { return m_Fonts.at(name); }
 
 	[[nodiscard]] std::expected<void, std::string> LoadFromFile(const std::filesystem::path& filePath);
 
@@ -41,7 +43,7 @@ private:
 private:
 	std::map<std::string, sf::Texture> m_Textures;
 	std::map<std::string, Animation> m_Animations;
-	// std::map<std::string, sf::Font> m_Fonts;
+	std::map<std::string, sf::Font> m_Fonts;
 };
 
 } // namespace Meche
