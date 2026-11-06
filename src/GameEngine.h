@@ -31,6 +31,8 @@ public:
 
 	sf::RenderWindow& GetWindow() { return m_Window; }
 
+	void Quit() { m_Window.close(); }
+
 private:
 	const ScenePtr& GetCurrentScene() { return m_Scenes.at(m_CurrentScene); }
 

@@ -1,6 +1,8 @@
 #pragma once
+
 #include "Vec2.h"
 
+#include <cstdint>
 #include <string>
 
 namespace Meche
@@ -28,26 +30,22 @@ struct TransformComponent : Component
 
 struct LifespanComponent : Component
 {
-	uint32_t DurationInFrames = 0;
+	uint32_t TotalFrames = 0;
 	uint32_t RemainingFrames = 0;
 
 	LifespanComponent() = default;
-	LifespanComponent(uint32_t durationInFrames) : DurationInFrames(durationInFrames), RemainingFrames(durationInFrames)
-	{
-	}
+	LifespanComponent(uint32_t totalFrames) : TotalFrames(totalFrames), RemainingFrames(totalFrames) {}
 };
 
 struct InputComponent : Component
 {
 	bool Up = false;
 	bool Down = false;
-	bool Right = false;
 	bool Left = false;
+	bool Right = false;
 	bool Shoot = false;
 	bool CanJump = true;
 	bool CanShoot = true;
-
-	InputComponent() = default;
 };
 
 struct BoundingBoxComponent : Component
@@ -56,7 +54,7 @@ struct BoundingBoxComponent : Component
 	Vec2 HalfSize;
 
 	BoundingBoxComponent() = default;
-	BoundingBoxComponent(const Vec2& size) : Size(size), HalfSize(size / 2) {}
+	BoundingBoxComponent(const Vec2& size) : Size(size), HalfSize(size / 2.0f) {}
 };
 
 struct GravityComponent : Component

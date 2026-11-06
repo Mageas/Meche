@@ -16,7 +16,7 @@ public:
 	Vec2() = default;
 	Vec2(float x, float y) : X(x), Y(y) {}
 
-	operator sf::Vector2f() const { return sf::Vector2f(X, Y); }
+	operator sf::Vector2f() const { return {X, Y}; }
 
 	Vec2& operator+=(const Vec2& other)
 	{
@@ -32,37 +32,10 @@ public:
 		return *this;
 	}
 
-	Vec2 operator+(const Vec2& other) const
-	{
-		return {
-			X + other.X,
-			Y + other.Y,
-		};
-	}
-
-	Vec2 operator-(const Vec2& other) const
-	{
-		return {
-			X - other.X,
-			Y - other.Y,
-		};
-	}
-
-	Vec2 operator*(float multiplier) const
-	{
-		return {
-			X * multiplier,
-			Y * multiplier,
-		};
-	}
-
-	Vec2 operator/(float denominator) const
-	{
-		return {
-			X / denominator,
-			Y / denominator,
-		};
-	}
+	Vec2 operator+(const Vec2& other) const { return {X + other.X, Y + other.Y}; }
+	Vec2 operator-(const Vec2& other) const { return {X - other.X, Y - other.Y}; }
+	Vec2 operator*(float scalar) const { return {X * scalar, Y * scalar}; }
+	Vec2 operator/(float scalar) const { return {X / scalar, Y / scalar}; }
 
 	float LengthSquared() const { return X * X + Y * Y; }
 	float Length() const { return std::sqrt(LengthSquared()); }

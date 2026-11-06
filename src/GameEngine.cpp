@@ -18,6 +18,7 @@ std::expected<void, std::string> GameEngine::Init()
 {
 	m_Window.create(sf::VideoMode({1280, 720}), "Meche");
 	m_Window.setFramerateLimit(60);
+	m_Window.setKeyRepeatEnabled(false);
 
 	if (!ImGui::SFML::Init(m_Window))
 		return std::unexpected("Unable to initialize ImGui");
@@ -37,22 +38,18 @@ void GameEngine::Run()
 	{
 		const ScenePtr& currentScene = GetCurrentScene();
 
-		while (const std::optional<sf::Event> event = m_Window.pollEvent())
+		while (const auto event = m_Window.pollEvent())
 		{
 			ImGui::SFML::ProcessEvent(m_Window, *event);
 
 			if (event->is<sf::Event::Closed>())
-				m_Window.close();
+				Quit();
 
-			if (const sf::Event::KeyPressed* keyPressed = event->getIf<sf::Event::KeyPressed>())
-			{
+			if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
 				DispatchKeyAction(currentScene, keyPressed->scancode, Action::Type::Begin);
-			}
 
-			if (const sf::Event::KeyReleased* keyReleased = event->getIf<sf::Event::KeyReleased>())
-			{
+			if (const auto* keyReleased = event->getIf<sf::Event::KeyReleased>())
 				DispatchKeyAction(currentScene, keyReleased->scancode, Action::Type::End);
-			}
 		}
 
 		ImGui::SFML::Update(m_Window, deltaClock.restart());

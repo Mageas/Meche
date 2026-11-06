@@ -27,7 +27,7 @@ public:
 		ToggleGrid,
 	};
 
-	Action(Name actionName, Type actionType) : m_Name(actionName), m_Type(actionType) {}
+	Action(Name name, Type type) : m_Name(name), m_Type(type) {}
 
 	Name GetName() const { return m_Name; }
 	Type GetType() const { return m_Type; }
