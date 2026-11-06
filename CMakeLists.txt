@@ -40,7 +40,12 @@ add_executable(Meche src/Main.cpp
         src/Entity.h
         src/EntityManager.cpp
         src/EntityManager.h
-        src/Action.h)
+        src/Action.h
+        src/Scene.h
+        src/SceneMenu.cpp
+        src/SceneMenu.h
+        src/ScenePlay.cpp
+        src/ScenePlay.h)
 target_link_libraries(Meche PRIVATE SFML::Graphics ImGui-SFML::ImGui-SFML)
 
 if(MSVC)
