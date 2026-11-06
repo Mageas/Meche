@@ -1,7 +1,7 @@
 #include "SceneMenu.h"
+#include "ScenePlay.h"
 
 #include "GameEngine.h"
-#include "ScenePlay.h"
 
 namespace Meche
 {
@@ -9,6 +9,7 @@ namespace Meche
 SceneMenu::SceneMenu(GameEngine* gameEngine) : Scene(gameEngine)
 {
 	RegisterAction(sf::Keyboard::Scancode::Escape, Action::Name::Quit);
+	RegisterAction(sf::Keyboard::Scancode::S, Action::Name::Down);
 }
 
 void SceneMenu::Update() {}
