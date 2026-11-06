@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Animation.h"
 #include "Vec2.h"
 
 #include <cstdint>
@@ -71,6 +72,15 @@ struct StateComponent : Component
 
 	StateComponent() = default;
 	StateComponent(const std::string& state) : State(state) {}
+};
+
+struct AnimationComponent : Component
+{
+	Animation Current;
+	bool IsLooping = false;
+
+	AnimationComponent() = default;
+	AnimationComponent(const Animation& current, bool isLooping) : Current(current), IsLooping(isLooping) {}
 };
 
 } // namespace Meche

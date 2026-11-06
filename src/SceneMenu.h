@@ -14,9 +14,6 @@ public:
 	void Update() override;
 	void DoAction(const Action& action) override;
 	void Render() override;
-
-private:
-	Animation m_TestAnimation;
 };
 
 } // namespace Meche

@@ -14,12 +14,19 @@ SceneMenu::SceneMenu(GameEngine* gameEngine) : Scene(gameEngine)
 	RegisterAction(sf::Keyboard::Scancode::Escape, Action::Name::Quit);
 	RegisterAction(sf::Keyboard::Scancode::S, Action::Name::Down);
 
-	m_TestAnimation = Assets::Get().GetAnimation("PigRun");
+	EntityPtr entity = m_EntityManager.AddEntity(Entity::Tag::Player);
+	entity->AddComponent<AnimationComponent>(Assets::Get().GetAnimation("PigRun"), true);
 }
 
 void SceneMenu::Update()
 {
-	m_TestAnimation.Update();
+	m_EntityManager.Update();
+
+	for (const auto& entity : m_EntityManager.GetEntities())
+	{
+		if (entity->IsAlive() && entity->HasComponent<AnimationComponent>())
+			entity->GetComponent<AnimationComponent>().Current.Update();
+	}
 }
 
 void SceneMenu::DoAction(const Action& action)
@@ -44,10 +51,17 @@ void SceneMenu::Render()
 {
 	m_GameEngine->GetWindow().clear(sf::Color(10, 20, 60));
 
-	auto& testSprite = m_TestAnimation.GetSprite();
-	testSprite.setPosition(Vec2(500, 200));
-	testSprite.setScale(Vec2(10, 10));
-	m_GameEngine->GetWindow().draw(testSprite);
+	for (const auto& entity : m_EntityManager.GetEntities())
+	{
+		if (entity->IsAlive() && entity->HasComponent<AnimationComponent>())
+		{
+			auto& sprite = entity->GetComponent<AnimationComponent>().Current.GetSprite();
+
+			sprite.setPosition(Vec2(500, 200));
+			sprite.setScale(Vec2(10, 10));
+			m_GameEngine->GetWindow().draw(sprite);
+		}
+	}
 }
 
 } // namespace Meche

@@ -10,7 +10,7 @@ namespace Meche
 {
 
 using ComponentTuple = std::tuple<TransformComponent, LifespanComponent, InputComponent, BoundingBoxComponent,
-								  GravityComponent, StateComponent>;
+								  GravityComponent, StateComponent, AnimationComponent>;
 
 class Entity
 {
