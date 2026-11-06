@@ -1,12 +1,15 @@
 #include "ScenePlay.h"
 
+#include "Assets.h"
 #include "GameEngine.h"
 #include "SceneMenu.h"
+
+#include <SFML/Graphics/Text.hpp>
 
 namespace Meche
 {
 
-ScenePlay::ScenePlay(GameEngine* gameEngine) : Scene(gameEngine)
+ScenePlay::ScenePlay(GameEngine* gameEngine, std::string levelPath) : Scene(gameEngine), m_LevelPath(std::move(levelPath))
 {
 	RegisterAction(sf::Keyboard::Scancode::Escape, Action::Name::Quit);
 }
@@ -28,6 +31,11 @@ void ScenePlay::DoAction(const Action& action)
 	}
 }
 
-void ScenePlay::Render() {}
+void ScenePlay::Render()
+{
+	sf::Text selector(Assets::Get().GetFont("Arial"), m_LevelPath);
+	selector.setPosition(Vec2(100, 100));
+	m_GameEngine->GetWindow().draw(selector);
+}
 
 } // namespace Meche
