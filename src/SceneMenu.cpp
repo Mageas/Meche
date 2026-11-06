@@ -13,9 +13,14 @@ SceneMenu::SceneMenu(GameEngine* gameEngine) : Scene(gameEngine)
 {
 	RegisterAction(sf::Keyboard::Scancode::Escape, Action::Name::Quit);
 	RegisterAction(sf::Keyboard::Scancode::S, Action::Name::Down);
+
+	m_TestAnimation = Assets::Get().GetAnimation("PigRun");
 }
 
-void SceneMenu::Update() {}
+void SceneMenu::Update()
+{
+	m_TestAnimation.Update();
+}
 
 void SceneMenu::DoAction(const Action& action)
 {
@@ -39,9 +44,10 @@ void SceneMenu::Render()
 {
 	m_GameEngine->GetWindow().clear(sf::Color(10, 20, 60));
 
-	sf::Sprite sprite(Assets::Get().GetTexture("TexPigIdle"));
-	m_GameEngine->GetWindow().draw(sprite);
-
+	auto& testSprite = m_TestAnimation.GetSprite();
+	testSprite.setPosition(Vec2(500, 200));
+	testSprite.setScale(Vec2(10, 10));
+	m_GameEngine->GetWindow().draw(testSprite);
 }
 
 } // namespace Meche

@@ -49,7 +49,9 @@ add_executable(Meche src/Main.cpp
         src/GameEngine.cpp
         src/GameEngine.h
         src/Assets.cpp
-        src/Assets.h)
+        src/Assets.h
+        src/Animation.cpp
+        src/Animation.h)
 target_link_libraries(Meche PRIVATE SFML::Graphics ImGui-SFML::ImGui-SFML)
 
 if(MSVC)
