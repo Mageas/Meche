@@ -1,5 +1,6 @@
 #include "GameEngine.h"
 
+#include "Assets.h"
 #include "SceneMenu.h"
 
 #include <SFML/System/Clock.hpp>
@@ -12,10 +13,15 @@ GameEngine::~GameEngine()
 {
 	if (m_IsImGuiInit)
 		ImGui::SFML::Shutdown(m_Window);
+
+	Assets::Get().Clear();
 }
 
 std::expected<void, std::string> GameEngine::Init()
 {
+	if (auto result = Assets::Get().LoadFromFile("assets/assets.txt"); !result)
+		return std::unexpected(result.error());
+
 	m_Window.create(sf::VideoMode({1280, 720}), "Meche");
 	m_Window.setFramerateLimit(60);
 	m_Window.setKeyRepeatEnabled(false);

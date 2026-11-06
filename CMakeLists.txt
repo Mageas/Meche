@@ -47,7 +47,9 @@ add_executable(Meche src/Main.cpp
         src/ScenePlay.cpp
         src/ScenePlay.h
         src/GameEngine.cpp
-        src/GameEngine.h)
+        src/GameEngine.h
+        src/Assets.cpp
+        src/Assets.h)
 target_link_libraries(Meche PRIVATE SFML::Graphics ImGui-SFML::ImGui-SFML)
 
 if(MSVC)

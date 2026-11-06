@@ -1,7 +1,10 @@
 #include "SceneMenu.h"
+
+#include "Assets.h"
 #include "ScenePlay.h"
 
 #include "GameEngine.h"
+#include "SFML/Graphics/Sprite.hpp"
 
 namespace Meche
 {
@@ -35,6 +38,10 @@ void SceneMenu::DoAction(const Action& action)
 void SceneMenu::Render()
 {
 	m_GameEngine->GetWindow().clear(sf::Color(10, 20, 60));
+
+	sf::Sprite sprite(Assets::Get().GetTexture("TexPigIdle"));
+	m_GameEngine->GetWindow().draw(sprite);
+
 }
 
 } // namespace Meche
