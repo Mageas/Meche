@@ -39,7 +39,8 @@ add_executable(Meche src/Main.cpp
         src/Components.h
         src/Entity.h
         src/EntityManager.cpp
-        src/EntityManager.h)
+        src/EntityManager.h
+        src/Action.h)
 target_link_libraries(Meche PRIVATE SFML::Graphics ImGui-SFML::ImGui-SFML)
 
 if(MSVC)
