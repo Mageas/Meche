@@ -12,7 +12,7 @@ namespace Meche
 SceneMenu::SceneMenu(GameEngine* gameEngine) : Scene(gameEngine)
 {
 	RegisterAction(sf::Keyboard::Scancode::Escape, Action::Name::Quit);
-	RegisterAction(sf::Keyboard::Scancode::S, Action::Name::Down);
+	RegisterAction(sf::Keyboard::Scancode::D, Action::Name::Play);
 
 	EntityPtr entity = m_EntityManager.AddEntity(Entity::Tag::Player);
 	entity->AddComponent<AnimationComponent>(Assets::Get().GetAnimation("PigRun"), true);
@@ -38,7 +38,7 @@ void SceneMenu::DoAction(const Action& action)
 		case Action::Name::Quit:
 			m_GameEngine->Quit();
 			break;
-		case Action::Name::Down:
+		case Action::Name::Play:
 			m_GameEngine->ChangeScene<ScenePlay>("Game");
 			break;
 		default:
