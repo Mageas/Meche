@@ -2,6 +2,7 @@
 
 #include "Assets.h"
 #include "GameEngine.h"
+#include "Physics.h"
 #include "SceneMenu.h"
 
 #include <format>
@@ -17,7 +18,9 @@ ScenePlay::ScenePlay(GameEngine* gameEngine, std::string levelPath)
 {
 	RegisterAction(sf::Keyboard::Scancode::Escape, Action::Name::Quit);
 
+	RegisterAction(sf::Keyboard::Scancode::W, Action::Name::Up);
 	RegisterAction(sf::Keyboard::Scancode::A, Action::Name::Left);
+	RegisterAction(sf::Keyboard::Scancode::S, Action::Name::Down);
 	RegisterAction(sf::Keyboard::Scancode::D, Action::Name::Right);
 }
 
@@ -36,6 +39,7 @@ void ScenePlay::Update()
 	m_EntityManager.Update();
 	UpdatePlayerVelocity();
 	UpdateMovement();
+	UpdateCollisions();
 	UpdateAnimation();
 }
 
@@ -53,13 +57,21 @@ void ScenePlay::DoAction(const Action& action)
 				std::println(stderr, "[PLAY] {}", result.error());
 		}
 		break;
-	case Action::Name::Right:
+	case Action::Name::Up:
 		if (m_Player->IsAlive())
-			input.Right = isPressed;
+			input.Up = isPressed;
 		break;
 	case Action::Name::Left:
 		if (m_Player->IsAlive())
 			input.Left = isPressed;
+		break;
+	case Action::Name::Down:
+		if (m_Player->IsAlive())
+			input.Down = isPressed;
+		break;
+	case Action::Name::Right:
+		if (m_Player->IsAlive())
+			input.Right = isPressed;
 		break;
 	default:
 		break;
@@ -201,7 +213,39 @@ void ScenePlay::UpdateMovement()
 		if (!entity->IsAlive() || !transform.Exists)
 			continue;
 
+		transform.PreviousPosition = transform.Position;
 		transform.Position += transform.Velocity;
+	}
+}
+
+void ScenePlay::UpdateCollisions()
+{
+	if (!m_Player->IsAlive())
+		return;
+
+	TransformComponent& playerTransform = m_Player->GetComponent<TransformComponent>();
+
+	for (const auto& entity : m_EntityManager.GetEntitiesByTag(Entity::Tag::Tile))
+	{
+		const BoundingBoxComponent& entityBoundingBox = entity->GetComponent<BoundingBoxComponent>();
+		const TransformComponent& entityTransform = entity->GetComponent<TransformComponent>();
+
+		if (!entity->IsAlive() || !entityBoundingBox.Exists || !entityTransform.Exists)
+			continue;
+
+		const Vec2 overlap = Physics::GetOverlap(*m_Player, *entity);
+		if (!(overlap.X > 0 && overlap.Y > 0))
+			continue;
+
+		const Vec2 previousOverlap = Physics::GetPreviousOverlap(*m_Player, *entity);
+		const bool resolveY = previousOverlap.X > 0 || (previousOverlap.Y <= 0 && overlap.Y < overlap.X);
+
+		if (resolveY)
+			playerTransform.Position.Y +=
+				playerTransform.Position.Y > entityTransform.Position.Y ? overlap.Y : -overlap.Y;
+		else
+			playerTransform.Position.X +=
+				playerTransform.Position.X > entityTransform.Position.X ? overlap.X : -overlap.X;
 	}
 }
 

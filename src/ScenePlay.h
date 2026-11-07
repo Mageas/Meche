@@ -48,6 +48,7 @@ private:
 
 	void UpdatePlayerVelocity();
 	void UpdateMovement();
+	void UpdateCollisions();
 	void UpdateAnimation();
 
 private:
