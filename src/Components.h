@@ -9,6 +9,13 @@
 namespace Meche
 {
 
+enum class PlayerState
+{
+	Stand,
+	Run,
+	Air,
+};
+
 struct Component
 {
 	bool Exists = false;
@@ -45,7 +52,6 @@ struct InputComponent : Component
 	bool Right = false;
 	bool Shoot = false;
 	bool CanJump = true;
-	bool IsOnGround = false;
 	bool CanShoot = true;
 };
 
@@ -68,10 +74,10 @@ struct GravityComponent : Component
 
 struct StateComponent : Component
 {
-	std::string State;
+	PlayerState Current = PlayerState::Air;
 
 	StateComponent() = default;
-	StateComponent(const std::string& state) : State(state) {}
+	StateComponent(PlayerState current) : Current(current) {}
 };
 
 struct AnimationComponent : Component

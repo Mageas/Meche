@@ -98,6 +98,7 @@ void ScenePlay::Render()
 
 		auto& sprite = animation.Current.GetSprite();
 		sprite.setPosition(transform.Position);
+		sprite.setScale(transform.Scale);
 		m_GameEngine->GetWindow().draw(sprite);
 	}
 }
@@ -169,13 +170,14 @@ void ScenePlay::SpawnTile(const std::string& name, const Vec2& cell, Entity::Tag
 
 void ScenePlay::SpawnPlayer()
 {
-	const EntityPtr player = m_EntityManager.AddEntity(Entity::Tag::Player);
-	AnimationComponent& animation =
+	EntityPtr player = m_EntityManager.AddEntity(Entity::Tag::Player);
+	const AnimationComponent& animation =
 		player->AddComponent<AnimationComponent>(Assets::Get().GetAnimation("PigIdle"), true);
-	animation.Current.GetSprite().setScale(Vec2(-1, 1));
-	player->AddComponent<TransformComponent>(GridToMidPixel(m_PlayerConfig.SpawnCell, animation.Current.GetSize()));
+	player->AddComponent<TransformComponent>(GridToMidPixel(m_PlayerConfig.SpawnCell, animation.Current.GetSize()),
+											 Vec2(-1.0f, 1.0f));
 	player->AddComponent<BoundingBoxComponent>(m_PlayerConfig.CollisionSize);
 	player->AddComponent<InputComponent>();
+	player->AddComponent<StateComponent>();
 
 	m_Player = std::move(player);
 }
@@ -205,7 +207,8 @@ void ScenePlay::UpdatePlayerVelocity()
 		if (input.Left)
 			velocity.X -= m_PlayerConfig.RunSpeed;
 
-		if (input.Jump && input.CanJump && input.IsOnGround)
+		const StateComponent& state = m_Player->GetComponent<StateComponent>();
+		if (input.Jump && input.CanJump && state.Current != PlayerState::Air)
 		{
 			velocity.Y -= m_PlayerConfig.JumpSpeed;
 			input.CanJump = false;
@@ -258,9 +261,9 @@ void ScenePlay::UpdateCollisions()
 		return;
 
 	TransformComponent& playerTransform = m_Player->GetComponent<TransformComponent>();
-	InputComponent& playerInput = m_Player->GetComponent<InputComponent>();
+	StateComponent& playerState = m_Player->GetComponent<StateComponent>();
 
-	playerInput.IsOnGround = false;
+	bool isOnGround = false;
 
 	for (const auto& entity : m_EntityManager.GetEntitiesByTag(Entity::Tag::Tile))
 	{
@@ -284,7 +287,7 @@ void ScenePlay::UpdateCollisions()
 			playerTransform.Velocity.Y = 0;
 
 			if (isAbove)
-				playerInput.IsOnGround = true;
+				isOnGround = true;
 		}
 		else
 		{
@@ -292,6 +295,13 @@ void ScenePlay::UpdateCollisions()
 			playerTransform.Position.X += isOnRight ? overlap.X : -overlap.X;
 		}
 	}
+
+	if (!isOnGround)
+		playerState.Current = PlayerState::Air;
+	else if (playerTransform.Velocity.X != 0)
+		playerState.Current = PlayerState::Run;
+	else
+		playerState.Current = PlayerState::Stand;
 }
 
 void ScenePlay::UpdateAnimation()
@@ -301,25 +311,29 @@ void ScenePlay::UpdateAnimation()
 		AnimationComponent& animation = m_Player->GetComponent<AnimationComponent>();
 		TransformComponent& transform = m_Player->GetComponent<TransformComponent>();
 
+		const StateComponent& state = m_Player->GetComponent<StateComponent>();
+
+		std::string animationName;
+		switch (state.Current)
+		{
+		case PlayerState::Stand:
+			animationName = "PigIdle";
+			break;
+		case PlayerState::Run:
+			animationName = "PigRun";
+			break;
+		case PlayerState::Air:
+			animationName = transform.Velocity.Y < 0 ? "PigJump" : "PigFall";
+			break;
+		}
+
+		if (animation.Current.GetName() != animationName)
+			animation.Current = Assets::Get().GetAnimation(animationName);
+
 		if (transform.Velocity.X > 0)
-		{
-			if (animation.Current.GetName() != "PigRun")
-				animation.Current = Assets::Get().GetAnimation("PigRun");
-			animation.Current.GetSprite().setScale(Vec2(-1, 1));
-		}
+			transform.Scale.X = -1.0f;
 		else if (transform.Velocity.X < 0)
-		{
-			if (animation.Current.GetName() != "PigRun")
-				animation.Current = Assets::Get().GetAnimation("PigRun");
-			animation.Current.GetSprite().setScale(Vec2(1, 1));
-		}
-		else
-		{
-			const auto scale = animation.Current.GetSprite().getScale();
-			if (animation.Current.GetName() != "PigIdle")
-				animation.Current = Assets::Get().GetAnimation("PigIdle");
-			animation.Current.GetSprite().setScale(scale);
-		}
+			transform.Scale.X = 1.0f;
 	}
 
 	for (const auto& entity : m_EntityManager.GetEntities())
