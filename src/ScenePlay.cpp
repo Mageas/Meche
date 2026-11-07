@@ -15,14 +15,33 @@ ScenePlay::ScenePlay(GameEngine* gameEngine, std::string levelPath)
 	: Scene(gameEngine), m_LevelPath(std::move(levelPath))
 {
 	RegisterAction(sf::Keyboard::Scancode::Escape, Action::Name::Quit);
+
+	RegisterAction(sf::Keyboard::Scancode::A, Action::Name::Left);
+	RegisterAction(sf::Keyboard::Scancode::D, Action::Name::Right);
 }
 
-std::expected<void, std::string> ScenePlay::Init() { return LoadLevel(); }
+std::expected<void, std::string> ScenePlay::Init()
+{
+	if (const auto& result = LoadLevel(); !result)
+		return std::unexpected(result.error());
 
-void ScenePlay::Update() { m_EntityManager.Update(); }
+	SpawnPlayer();
+
+	return {};
+}
+
+void ScenePlay::Update()
+{
+	m_EntityManager.Update();
+	UpdatePlayerVelocity();
+	UpdateMovement();
+	UpdateAnimation();
+}
 
 void ScenePlay::DoAction(const Action& action)
 {
+	InputComponent& input = m_Player->GetComponent<InputComponent>();
+
 	if (action.GetType() == Action::Type::Begin)
 	{
 		switch (action.GetName())
@@ -30,6 +49,31 @@ void ScenePlay::DoAction(const Action& action)
 		case Action::Name::Quit:
 			if (const auto result = m_GameEngine->ChangeScene<SceneMenu>("Menu"); !result)
 				std::println(stderr, "[PLAY] {}", result.error());
+			break;
+		case Action::Name::Right:
+			if (m_Player->IsAlive())
+				input.Right = true;
+			break;
+		case Action::Name::Left:
+			if (m_Player->IsAlive())
+				input.Left = true;
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (action.GetType() == Action::Type::End)
+	{
+		switch (action.GetName())
+		{
+		case Action::Name::Right:
+			if (m_Player->IsAlive())
+				input.Right = false;
+			break;
+		case Action::Name::Left:
+			if (m_Player->IsAlive())
+				input.Left = false;
 			break;
 		default:
 			break;
@@ -129,6 +173,89 @@ Vec2 ScenePlay::GridToMidPixel(const Vec2& position, const Vec2& size) const
 		cellLeft + (size.X / 2),
 		cellBottom - (size.Y / 2),
 	};
+}
+
+void ScenePlay::SpawnPlayer()
+{
+	const EntityPtr player = m_EntityManager.AddEntity(Entity::Tag::Player);
+	AnimationComponent& animation =
+		player->AddComponent<AnimationComponent>(Assets::Get().GetAnimation("PigIdle"), true);
+	animation.Current.GetSprite().setScale(Vec2(-1, 1));
+	player->AddComponent<TransformComponent>(GridToMidPixel(m_PlayerConfig.SpawnCell, animation.Current.GetSize()));
+	player->AddComponent<BoundingBoxComponent>(m_PlayerConfig.CollisionSize);
+	player->AddComponent<InputComponent>();
+
+	m_Player = std::move(player);
+}
+
+void ScenePlay::UpdatePlayerVelocity()
+{
+	if (m_Player->IsAlive())
+	{
+		TransformComponent& transform = m_Player->GetComponent<TransformComponent>();
+		const InputComponent& input = m_Player->GetComponent<InputComponent>();
+
+		float velocityX = 0;
+
+		if (input.Right)
+			velocityX += m_PlayerConfig.RunSpeed;
+		if (input.Left)
+			velocityX -= m_PlayerConfig.RunSpeed;
+
+		transform.Velocity.X = velocityX;
+	}
+}
+
+void ScenePlay::UpdateMovement()
+{
+	for (const auto& entity : m_EntityManager.GetEntities())
+	{
+		TransformComponent& transform = entity->GetComponent<TransformComponent>();
+
+		if (!entity->IsAlive() || !transform.Exists)
+			continue;
+
+		transform.Position += transform.Velocity;
+	}
+}
+
+void ScenePlay::UpdateAnimation()
+{
+	if (m_Player->IsAlive())
+	{
+		AnimationComponent& animation = m_Player->GetComponent<AnimationComponent>();
+		TransformComponent& transform = m_Player->GetComponent<TransformComponent>();
+
+		if (transform.Velocity.X > 0)
+		{
+			if (animation.Current.GetName() != "PigRun")
+				animation.Current = Assets::Get().GetAnimation("PigRun");
+			animation.Current.GetSprite().setScale(Vec2(-1, 1));
+		}
+		else if (transform.Velocity.X < 0)
+		{
+			if (animation.Current.GetName() != "PigRun")
+				animation.Current = Assets::Get().GetAnimation("PigRun");
+			animation.Current.GetSprite().setScale(Vec2(1, 1));
+		}
+		else
+		{
+			const auto scale = animation.Current.GetSprite().getScale();
+			if (animation.Current.GetName() != "PigIdle")
+				animation.Current = Assets::Get().GetAnimation("PigIdle");
+			animation.Current.GetSprite().setScale(scale);
+		}
+	}
+
+	for (const auto& entity : m_EntityManager.GetEntities())
+	{
+		AnimationComponent& animation = entity->GetComponent<AnimationComponent>();
+
+		if (!entity->IsAlive() || !animation.Exists)
+			continue;
+
+		animation.Current.Update();
+	}
 }
 
 } // namespace Meche

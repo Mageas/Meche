@@ -40,7 +40,14 @@ public:
 
 	[[nodiscard]] std::expected<void, std::string> LoadLevel();
 
+private:
 	Vec2 GridToMidPixel(const Vec2& position, const Vec2& size) const;
+
+	void SpawnPlayer();
+
+	void UpdatePlayerVelocity();
+	void UpdateMovement();
+	void UpdateAnimation();
 
 private:
 	static constexpr float s_CellSize = 32.0f;
@@ -51,6 +58,8 @@ private:
 
 	BombConfig m_BombConfig;
 	PlayerConfig m_PlayerConfig;
+
+	EntityPtr m_Player;
 };
 
 } // namespace Meche
