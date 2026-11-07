@@ -26,8 +26,13 @@ private:
 	void SelectPreviousLevel();
 
 private:
+	static constexpr uint32_t s_ErrorDisplayFrames = 180;
+
 	std::array<std::string, 2> m_Levels = {"assets/level1.txt", "assets/level2.txt"};
 	uint32_t m_SelectedLevel = 0;
+
+	std::string m_ErrorMessage;
+	uint32_t m_ErrorFramesLeft = 0;
 };
 
 } // namespace Meche

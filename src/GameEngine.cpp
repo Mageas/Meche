@@ -31,7 +31,8 @@ std::expected<void, std::string> GameEngine::Init()
 
 	m_IsImGuiInit = true;
 
-	ChangeScene<SceneMenu>("Menu");
+	if (const auto result = ChangeScene<SceneMenu>("Menu"); !result)
+		return std::unexpected(result.error());
 
 	return {};
 }

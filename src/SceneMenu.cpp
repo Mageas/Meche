@@ -8,6 +8,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <filesystem>
+#include <print>
 
 namespace Meche
 {
@@ -47,6 +48,9 @@ void SceneMenu::Update()
 		if (entity->IsAlive() && entity->HasComponent<AnimationComponent>())
 			entity->GetComponent<AnimationComponent>().Current.Update();
 	}
+
+	if (m_ErrorFramesLeft > 0)
+		m_ErrorFramesLeft--;
 }
 
 void SceneMenu::DoAction(const Action& action)
@@ -65,7 +69,12 @@ void SceneMenu::DoAction(const Action& action)
 			SelectNextLevel();
 			break;
 		case Action::Name::Play:
-			m_GameEngine->ChangeScene<ScenePlay>("Game", m_Levels[m_SelectedLevel]);
+			if (const auto result = m_GameEngine->ChangeScene<ScenePlay>("Game", m_Levels[m_SelectedLevel]); !result)
+			{
+				m_ErrorMessage = result.error();
+				m_ErrorFramesLeft = s_ErrorDisplayFrames;
+				std::println(stderr, "[MENU] {}", m_ErrorMessage);
+			}
 			break;
 		default:
 			break;
@@ -75,6 +84,8 @@ void SceneMenu::DoAction(const Action& action)
 
 void SceneMenu::Render()
 {
+	m_GameEngine->GetWindow().setView(m_GameEngine->GetWindow().getDefaultView());
+
 	m_GameEngine->GetWindow().clear(sf::Color(10, 20, 60));
 
 	for (const auto& entity : m_EntityManager.GetEntities())
@@ -88,6 +99,9 @@ void SceneMenu::Render()
 			m_GameEngine->GetWindow().draw(sprite);
 		}
 	}
+
+	if (m_ErrorFramesLeft > 0)
+		DrawCenteredText(m_GameEngine->GetWindow(), m_ErrorMessage, 24, 375.0f, sf::Color(230, 90, 90));
 
 	DrawLevelSelector();
 }
@@ -110,7 +124,8 @@ void SceneMenu::DrawLevelSelector()
 	sf::RectangleShape highlight(highlightSize);
 	highlight.setOrigin(highlightSize / 2.0f);
 	highlight.setFillColor(highlightColor);
-	highlight.setPosition({window.getView().getCenter().x, firstRowY + rowHeight * static_cast<float>(m_SelectedLevel)});
+	highlight.setPosition(
+		{window.getView().getCenter().x, firstRowY + rowHeight * static_cast<float>(m_SelectedLevel)});
 	window.draw(highlight);
 
 	for (uint32_t i = 0; i < m_Levels.size(); i++)

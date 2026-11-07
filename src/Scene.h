@@ -5,7 +5,9 @@
 
 #include <SFML/Window/Keyboard.hpp>
 #include <cstdint>
+#include <expected>
 #include <map>
+#include <string>
 
 namespace Meche
 {
@@ -18,6 +20,8 @@ class Scene
 {
 public:
 	virtual ~Scene() = default;
+
+	[[nodiscard]] virtual std::expected<void, std::string> Init() { return {}; }
 
 	virtual void Update() = 0;
 	virtual void DoAction(const Action& action) = 0;

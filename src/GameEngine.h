@@ -23,10 +23,17 @@ public:
 	[[nodiscard]] std::expected<void, std::string> Init();
 	void Run();
 
-	template <typename T, typename... Args> void ChangeScene(const std::string& name, Args&&... args)
+	template <typename T, typename... Args>
+	[[nodiscard]] std::expected<void, std::string> ChangeScene(const std::string& name, Args&&... args)
 	{
-		m_Scenes[name] = std::make_shared<T>(this, std::forward<Args>(args)...);
+		auto scene = std::make_shared<T>(this, std::forward<Args>(args)...);
+		if (const auto result = scene->Init(); !result)
+			return std::unexpected(result.error());
+
+		m_Scenes[name] = std::move(scene);
 		m_CurrentScene = name;
+
+		return {};
 	}
 
 	sf::RenderWindow& GetWindow() { return m_Window; }
