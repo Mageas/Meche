@@ -20,7 +20,6 @@ ScenePlay::ScenePlay(GameEngine* gameEngine, std::string levelPath)
 
 	RegisterAction(sf::Keyboard::Scancode::W, Action::Name::Up);
 	RegisterAction(sf::Keyboard::Scancode::A, Action::Name::Left);
-	RegisterAction(sf::Keyboard::Scancode::S, Action::Name::Down);
 	RegisterAction(sf::Keyboard::Scancode::D, Action::Name::Right);
 }
 
@@ -59,15 +58,21 @@ void ScenePlay::DoAction(const Action& action)
 		break;
 	case Action::Name::Up:
 		if (m_Player->IsAlive())
-			input.Up = isPressed;
+		{
+			if (isPressed)
+			{
+				input.Jump = true;
+			}
+			else
+			{
+				input.Jump = false;
+				input.CanJump = true;
+			}
+		}
 		break;
 	case Action::Name::Left:
 		if (m_Player->IsAlive())
 			input.Left = isPressed;
-		break;
-	case Action::Name::Down:
-		if (m_Player->IsAlive())
-			input.Down = isPressed;
 		break;
 	case Action::Name::Right:
 		if (m_Player->IsAlive())
@@ -191,16 +196,29 @@ void ScenePlay::UpdatePlayerVelocity()
 	if (m_Player->IsAlive())
 	{
 		TransformComponent& transform = m_Player->GetComponent<TransformComponent>();
-		const InputComponent& input = m_Player->GetComponent<InputComponent>();
+		InputComponent& input = m_Player->GetComponent<InputComponent>();
 
-		float velocityX = 0;
+		Vec2 velocity;
 
 		if (input.Right)
-			velocityX += m_PlayerConfig.RunSpeed;
+			velocity.X += m_PlayerConfig.RunSpeed;
 		if (input.Left)
-			velocityX -= m_PlayerConfig.RunSpeed;
+			velocity.X -= m_PlayerConfig.RunSpeed;
 
-		transform.Velocity.X = velocityX;
+		if (input.Jump && input.CanJump && input.IsOnGround)
+		{
+			velocity.Y -= m_PlayerConfig.JumpSpeed;
+			input.CanJump = false;
+		}
+
+		if (transform.Velocity.Y < 0 && !input.Jump)
+			transform.Velocity.Y = 0;
+
+		velocity.Y += m_PlayerConfig.Gravity;
+
+		transform.Velocity.X = velocity.X;
+		transform.Velocity.Y =
+			std::clamp(transform.Velocity.Y + velocity.Y, -m_PlayerConfig.MaxSpeed, m_PlayerConfig.MaxSpeed);
 	}
 }
 
@@ -216,6 +234,22 @@ void ScenePlay::UpdateMovement()
 		transform.PreviousPosition = transform.Position;
 		transform.Position += transform.Velocity;
 	}
+
+	if (m_Player->IsAlive())
+	{
+		TransformComponent& transform = m_Player->GetComponent<TransformComponent>();
+		if (transform.Position.Y > s_WorldHeight)
+		{
+			const AnimationComponent& animation = m_Player->GetComponent<AnimationComponent>();
+			transform.Position = GridToMidPixel(m_PlayerConfig.SpawnCell, animation.Current.GetSize());
+			transform.PreviousPosition = transform.Position;
+			transform.Velocity = Vec2();
+		}
+
+		const BoundingBoxComponent& boundingBox = m_Player->GetComponent<BoundingBoxComponent>();
+		if (transform.Position.X - boundingBox.HalfSize.X < 0)
+			transform.Position.X = boundingBox.HalfSize.X;
+	}
 }
 
 void ScenePlay::UpdateCollisions()
@@ -224,6 +258,9 @@ void ScenePlay::UpdateCollisions()
 		return;
 
 	TransformComponent& playerTransform = m_Player->GetComponent<TransformComponent>();
+	InputComponent& playerInput = m_Player->GetComponent<InputComponent>();
+
+	playerInput.IsOnGround = false;
 
 	for (const auto& entity : m_EntityManager.GetEntitiesByTag(Entity::Tag::Tile))
 	{
@@ -241,11 +278,19 @@ void ScenePlay::UpdateCollisions()
 		const bool resolveY = previousOverlap.X > 0 || (previousOverlap.Y <= 0 && overlap.Y < overlap.X);
 
 		if (resolveY)
-			playerTransform.Position.Y +=
-				playerTransform.Position.Y > entityTransform.Position.Y ? overlap.Y : -overlap.Y;
+		{
+			const bool isAbove = playerTransform.Position.Y < entityTransform.Position.Y;
+			playerTransform.Position.Y += isAbove ? -overlap.Y : overlap.Y;
+			playerTransform.Velocity.Y = 0;
+
+			if (isAbove)
+				playerInput.IsOnGround = true;
+		}
 		else
-			playerTransform.Position.X +=
-				playerTransform.Position.X > entityTransform.Position.X ? overlap.X : -overlap.X;
+		{
+			const bool isOnRight = playerTransform.Position.X > entityTransform.Position.X;
+			playerTransform.Position.X += isOnRight ? overlap.X : -overlap.X;
+		}
 	}
 }
 

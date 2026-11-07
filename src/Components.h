@@ -40,12 +40,12 @@ struct LifespanComponent : Component
 
 struct InputComponent : Component
 {
-	bool Up = false;
-	bool Down = false;
+	bool Jump = false;
 	bool Left = false;
 	bool Right = false;
 	bool Shoot = false;
 	bool CanJump = true;
+	bool IsOnGround = false;
 	bool CanShoot = true;
 };
 
