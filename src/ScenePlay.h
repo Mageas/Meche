@@ -2,6 +2,7 @@
 
 #include "Scene.h"
 
+#include <cstdint>
 #include <expected>
 #include <string>
 
@@ -11,15 +12,15 @@ namespace Meche
 class ScenePlay : public Scene
 {
 public:
-	struct BombConfig
-	{
-		std::string AnimationName;
-		Vec2 CollisionSize;
-		Vec2 ThrowSpeed;
-		uint32_t FuseFrames = 0;
-		Vec2 BlastSize;
-	};
+	explicit ScenePlay(GameEngine* gameEngine, std::string levelPath);
 
+	[[nodiscard]] std::expected<void, std::string> Init() override;
+
+	void Update() override;
+	void DoAction(const Action& action) override;
+	void Render() override;
+
+private:
 	struct PlayerConfig
 	{
 		Vec2 SpawnCell;
@@ -30,20 +31,20 @@ public:
 		float Gravity = 0.0f;
 	};
 
-	explicit ScenePlay(GameEngine* gameEngine, std::string levelPath);
-
-	[[nodiscard]] std::expected<void, std::string> Init() override;
-
-	void Update() override;
-	void DoAction(const Action& action) override;
-	void Render() override;
-
-	[[nodiscard]] std::expected<void, std::string> LoadLevel();
+	struct BombConfig
+	{
+		std::string AnimationName;
+		Vec2 CollisionSize;
+		Vec2 ThrowSpeed;
+		uint32_t FuseFrames = 0;
+		Vec2 BlastSize;
+	};
 
 private:
-	Vec2 GridToMidPixel(const Vec2& position, const Vec2& size) const;
-
+	[[nodiscard]] std::expected<void, std::string> LoadLevel();
+	void SpawnTile(const std::string& name, const Vec2& cell, Entity::Tag tag);
 	void SpawnPlayer();
+	Vec2 GridToMidPixel(const Vec2& position, const Vec2& size) const;
 
 	void UpdatePlayerVelocity();
 	void UpdateMovement();
@@ -51,13 +52,12 @@ private:
 
 private:
 	static constexpr float s_CellSize = 32.0f;
-	static constexpr float s_WorldHeight = 360.0f;
 	static constexpr float s_WorldWidth = 640.0f;
+	static constexpr float s_WorldHeight = 360.0f;
 
 	std::string m_LevelPath;
-
-	BombConfig m_BombConfig;
 	PlayerConfig m_PlayerConfig;
+	BombConfig m_BombConfig;
 
 	EntityPtr m_Player;
 };

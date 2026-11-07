@@ -4,8 +4,9 @@
 #include "GameEngine.h"
 #include "SceneMenu.h"
 
-#include <SFML/Graphics/Text.hpp>
+#include <format>
 #include <fstream>
+#include <limits>
 #include <print>
 
 namespace Meche
@@ -22,7 +23,7 @@ ScenePlay::ScenePlay(GameEngine* gameEngine, std::string levelPath)
 
 std::expected<void, std::string> ScenePlay::Init()
 {
-	if (const auto& result = LoadLevel(); !result)
+	if (const auto result = LoadLevel(); !result)
 		return std::unexpected(result.error());
 
 	SpawnPlayer();
@@ -41,49 +42,33 @@ void ScenePlay::Update()
 void ScenePlay::DoAction(const Action& action)
 {
 	InputComponent& input = m_Player->GetComponent<InputComponent>();
+	const bool isPressed = action.GetType() == Action::Type::Begin;
 
-	if (action.GetType() == Action::Type::Begin)
+	switch (action.GetName())
 	{
-		switch (action.GetName())
+	case Action::Name::Quit:
+		if (isPressed)
 		{
-		case Action::Name::Quit:
 			if (const auto result = m_GameEngine->ChangeScene<SceneMenu>("Menu"); !result)
 				std::println(stderr, "[PLAY] {}", result.error());
-			break;
-		case Action::Name::Right:
-			if (m_Player->IsAlive())
-				input.Right = true;
-			break;
-		case Action::Name::Left:
-			if (m_Player->IsAlive())
-				input.Left = true;
-			break;
-		default:
-			break;
 		}
-	}
-
-	if (action.GetType() == Action::Type::End)
-	{
-		switch (action.GetName())
-		{
-		case Action::Name::Right:
-			if (m_Player->IsAlive())
-				input.Right = false;
-			break;
-		case Action::Name::Left:
-			if (m_Player->IsAlive())
-				input.Left = false;
-			break;
-		default:
-			break;
-		}
+		break;
+	case Action::Name::Right:
+		if (m_Player->IsAlive())
+			input.Right = isPressed;
+		break;
+	case Action::Name::Left:
+		if (m_Player->IsAlive())
+			input.Left = isPressed;
+		break;
+	default:
+		break;
 	}
 }
 
 void ScenePlay::Render()
 {
-	sf::View view(Vec2(s_WorldWidth / 2, s_WorldHeight / 2), Vec2(s_WorldWidth, s_WorldHeight));
+	const sf::View view(Vec2(s_WorldWidth / 2, s_WorldHeight / 2), Vec2(s_WorldWidth, s_WorldHeight));
 	m_GameEngine->GetWindow().setView(view);
 
 	for (const auto& entity : m_EntityManager.GetEntities())
@@ -119,29 +104,20 @@ std::expected<void, std::string> ScenePlay::LoadLevel()
 		if (keyword == "Tile")
 		{
 			std::string name;
-			uint32_t positionX = 0;
-			uint32_t positionY = 0;
+			Vec2 cell;
 
-			file >> name >> positionX >> positionY;
+			file >> name >> cell.X >> cell.Y;
 
-			const Animation& animation = Assets::Get().GetAnimation(name);
-			const EntityPtr tile = m_EntityManager.AddEntity(Entity::Tag::Tile);
-			tile->AddComponent<TransformComponent>(GridToMidPixel(Vec2(positionX, positionY), animation.GetSize()));
-			tile->AddComponent<BoundingBoxComponent>(animation.GetSize());
-			tile->AddComponent<AnimationComponent>(animation, true);
+			SpawnTile(name, cell, Entity::Tag::Tile);
 		}
 		else if (keyword == "Dec")
 		{
 			std::string name;
-			uint32_t positionX = 0;
-			uint32_t positionY = 0;
+			Vec2 cell;
 
-			file >> name >> positionX >> positionY;
+			file >> name >> cell.X >> cell.Y;
 
-			const Animation& animation = Assets::Get().GetAnimation(name);
-			const EntityPtr tile = m_EntityManager.AddEntity(Entity::Tag::Decoration);
-			tile->AddComponent<TransformComponent>(GridToMidPixel(Vec2(positionX, positionY), animation.GetSize()));
-			tile->AddComponent<AnimationComponent>(animation, true);
+			SpawnTile(name, cell, Entity::Tag::Decoration);
 		}
 		else if (keyword == "Bomb")
 		{
@@ -164,15 +140,14 @@ std::expected<void, std::string> ScenePlay::LoadLevel()
 	return {};
 }
 
-Vec2 ScenePlay::GridToMidPixel(const Vec2& position, const Vec2& size) const
+void ScenePlay::SpawnTile(const std::string& name, const Vec2& cell, Entity::Tag tag)
 {
-	const float cellLeft = position.X * s_CellSize;
-	const float cellBottom = s_WorldHeight - (position.Y * s_CellSize);
-
-	return {
-		cellLeft + (size.X / 2),
-		cellBottom - (size.Y / 2),
-	};
+	const Animation& animation = Assets::Get().GetAnimation(name);
+	const EntityPtr tile = m_EntityManager.AddEntity(tag);
+	tile->AddComponent<TransformComponent>(GridToMidPixel(cell, animation.GetSize()));
+	if (tag == Entity::Tag::Tile)
+		tile->AddComponent<BoundingBoxComponent>(animation.GetSize());
+	tile->AddComponent<AnimationComponent>(animation, true);
 }
 
 void ScenePlay::SpawnPlayer()
@@ -186,6 +161,17 @@ void ScenePlay::SpawnPlayer()
 	player->AddComponent<InputComponent>();
 
 	m_Player = std::move(player);
+}
+
+Vec2 ScenePlay::GridToMidPixel(const Vec2& position, const Vec2& size) const
+{
+	const float cellLeft = position.X * s_CellSize;
+	const float cellBottom = s_WorldHeight - (position.Y * s_CellSize);
+
+	return {
+		cellLeft + (size.X / 2),
+		cellBottom - (size.Y / 2),
+	};
 }
 
 void ScenePlay::UpdatePlayerVelocity()
