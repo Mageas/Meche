@@ -99,6 +99,22 @@ std::expected<void, std::string> ScenePlay::LoadLevel()
 			tile->AddComponent<TransformComponent>(GridToMidPixel(Vec2(positionX, positionY), animation.GetSize()));
 			tile->AddComponent<AnimationComponent>(animation, true);
 		}
+		else if (keyword == "Bomb")
+		{
+			file >> m_BombConfig.AnimationName >> m_BombConfig.CollisionSize.X >> m_BombConfig.CollisionSize.Y >>
+				m_BombConfig.ThrowSpeed.X >> m_BombConfig.ThrowSpeed.Y >> m_BombConfig.FuseFrames >>
+				m_BombConfig.BlastSize.X >> m_BombConfig.BlastSize.Y;
+		}
+		else if (keyword == "Player")
+		{
+			file >> m_PlayerConfig.SpawnCell.X >> m_PlayerConfig.SpawnCell.Y >> m_PlayerConfig.CollisionSize.X >>
+				m_PlayerConfig.CollisionSize.Y >> m_PlayerConfig.RunSpeed >> m_PlayerConfig.JumpSpeed >>
+				m_PlayerConfig.MaxSpeed >> m_PlayerConfig.Gravity;
+		}
+		else
+		{
+			return std::unexpected(std::format("Unknown keyword '{}' in '{}'", keyword, m_LevelPath));
+		}
 	}
 
 	return {};
