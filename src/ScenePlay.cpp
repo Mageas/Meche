@@ -5,11 +5,14 @@
 #include "Physics.h"
 #include "SceneMenu.h"
 
+#include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
+#include <algorithm>
+#include <cmath>
 #include <format>
 #include <fstream>
 #include <limits>
 #include <print>
-#include <algorithm>
 
 namespace Meche
 {
@@ -22,6 +25,9 @@ ScenePlay::ScenePlay(GameEngine* gameEngine, std::string levelPath)
 	RegisterAction(sf::Keyboard::Scancode::W, Action::Name::Up);
 	RegisterAction(sf::Keyboard::Scancode::A, Action::Name::Left);
 	RegisterAction(sf::Keyboard::Scancode::D, Action::Name::Right);
+	RegisterAction(sf::Keyboard::Scancode::T, Action::Name::ToggleTextures);
+	RegisterAction(sf::Keyboard::Scancode::C, Action::Name::ToggleCollision);
+	RegisterAction(sf::Keyboard::Scancode::G, Action::Name::ToggleGrid);
 }
 
 std::expected<void, std::string> ScenePlay::Init()
@@ -79,6 +85,18 @@ void ScenePlay::DoAction(const Action& action)
 		if (m_Player->IsAlive())
 			input.Right = isPressed;
 		break;
+	case Action::Name::ToggleTextures:
+		if (isPressed)
+			m_ShowTextures = !m_ShowTextures;
+		break;
+	case Action::Name::ToggleCollision:
+		if (isPressed)
+			m_ShowCollisions = !m_ShowCollisions;
+		break;
+	case Action::Name::ToggleGrid:
+		if (isPressed)
+			m_ShowGrid = !m_ShowGrid;
+		break;
 	default:
 		break;
 	}
@@ -86,25 +104,14 @@ void ScenePlay::DoAction(const Action& action)
 
 void ScenePlay::Render()
 {
-	const Vec2& playerPosition = m_Player->GetComponent<TransformComponent>().Position;
-	const float viewCenterX = std::max(playerPosition.X, s_WorldWidth / 2);
+	ApplyCamera();
 
-	const sf::View view(Vec2(viewCenterX, s_WorldHeight / 2), Vec2(s_WorldWidth, s_WorldHeight));
-	m_GameEngine->GetWindow().setView(view);
-
-	for (const auto& entity : m_EntityManager.GetEntities())
-	{
-		AnimationComponent& animation = entity->GetComponent<AnimationComponent>();
-		TransformComponent& transform = entity->GetComponent<TransformComponent>();
-
-		if (!entity->IsAlive() || !animation.Exists || !transform.Exists)
-			continue;
-
-		auto& sprite = animation.Current.GetSprite();
-		sprite.setPosition(transform.Position);
-		sprite.setScale(transform.Scale);
-		m_GameEngine->GetWindow().draw(sprite);
-	}
+	if (m_ShowTextures)
+		RenderEntities();
+	if (m_ShowCollisions)
+		RenderDebugCollisions();
+	if (m_ShowGrid)
+		RenderDebugGrid();
 }
 
 std::expected<void, std::string> ScenePlay::LoadLevel()
@@ -349,6 +356,84 @@ void ScenePlay::UpdateAnimation()
 
 		animation.Current.Update();
 	}
+}
+
+void ScenePlay::ApplyCamera()
+{
+	const Vec2& playerPosition = m_Player->GetComponent<TransformComponent>().Position;
+	const float viewCenterX = std::max(playerPosition.X, s_WorldWidth / 2);
+
+	const sf::View view(Vec2(viewCenterX, s_WorldHeight / 2), Vec2(s_WorldWidth, s_WorldHeight));
+	m_GameEngine->GetWindow().setView(view);
+}
+
+void ScenePlay::RenderEntities()
+{
+	sf::RenderWindow& window = m_GameEngine->GetWindow();
+
+	for (const auto& entity : m_EntityManager.GetEntities())
+	{
+		AnimationComponent& animation = entity->GetComponent<AnimationComponent>();
+		const TransformComponent& transform = entity->GetComponent<TransformComponent>();
+
+		if (!entity->IsAlive() || !animation.Exists || !transform.Exists)
+			continue;
+
+		auto& sprite = animation.Current.GetSprite();
+		sprite.setPosition(transform.Position);
+		sprite.setScale(transform.Scale);
+		window.draw(sprite);
+	}
+}
+
+void ScenePlay::RenderDebugCollisions()
+{
+	sf::RenderWindow& window = m_GameEngine->GetWindow();
+
+	sf::RectangleShape rectangle;
+	rectangle.setFillColor(sf::Color::Transparent);
+	rectangle.setOutlineColor(sf::Color::White);
+	rectangle.setOutlineThickness(-1);
+
+	for (const auto& entity : m_EntityManager.GetEntities())
+	{
+		const TransformComponent& transform = entity->GetComponent<TransformComponent>();
+		const BoundingBoxComponent& boundingBox = entity->GetComponent<BoundingBoxComponent>();
+
+		if (!entity->IsAlive() || !transform.Exists || !boundingBox.Exists)
+			continue;
+
+		rectangle.setSize(boundingBox.Size);
+		rectangle.setPosition(transform.Position - boundingBox.HalfSize);
+		window.draw(rectangle);
+	}
+}
+
+void ScenePlay::RenderDebugGrid()
+{
+	sf::RenderWindow& window = m_GameEngine->GetWindow();
+
+	const sf::Color lineColor(255, 255, 255, 80);
+	const float viewCenterX = window.getView().getCenter().x;
+	const float viewLeft = viewCenterX - s_WorldWidth / 2;
+	const float viewRight = viewCenterX + s_WorldWidth / 2;
+
+	sf::VertexArray lines(sf::PrimitiveType::Lines);
+
+	for (float x = std::floor(viewLeft / s_CellSize) * s_CellSize; x <= viewRight; x += s_CellSize)
+	{
+		lines.append({Vec2(x, 0), lineColor});
+		lines.append({Vec2(x, s_WorldHeight), lineColor});
+	}
+
+	// Cells count from the bottom, and the height is not a multiple of a cell.
+	for (float y = s_WorldHeight; y >= 0; y -= s_CellSize)
+	{
+		lines.append({Vec2(viewLeft, y), lineColor});
+		lines.append({Vec2(viewRight, y), lineColor});
+	}
+
+	window.draw(lines);
 }
 
 } // namespace Meche

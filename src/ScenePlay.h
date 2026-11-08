@@ -51,6 +51,11 @@ private:
 	void UpdateCollisions();
 	void UpdateAnimation();
 
+	void ApplyCamera();
+	void RenderEntities();
+	void RenderDebugCollisions();
+	void RenderDebugGrid();
+
 private:
 	static constexpr float s_CellSize = 32.0f;
 	static constexpr float s_WorldWidth = 640.0f;
@@ -61,6 +66,10 @@ private:
 	BombConfig m_BombConfig;
 
 	EntityPtr m_Player;
+
+	bool m_ShowTextures = true;
+	bool m_ShowCollisions = false;
+	bool m_ShowGrid = false;
 };
 
 } // namespace Meche
