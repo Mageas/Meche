@@ -9,6 +9,7 @@
 #include <fstream>
 #include <limits>
 #include <print>
+#include <algorithm>
 
 namespace Meche
 {
@@ -85,7 +86,10 @@ void ScenePlay::DoAction(const Action& action)
 
 void ScenePlay::Render()
 {
-	const sf::View view(Vec2(s_WorldWidth / 2, s_WorldHeight / 2), Vec2(s_WorldWidth, s_WorldHeight));
+	const Vec2& playerPosition = m_Player->GetComponent<TransformComponent>().Position;
+	const float viewCenterX = std::max(playerPosition.X, s_WorldWidth / 2);
+
+	const sf::View view(Vec2(viewCenterX, s_WorldHeight / 2), Vec2(s_WorldWidth, s_WorldHeight));
 	m_GameEngine->GetWindow().setView(view);
 
 	for (const auto& entity : m_EntityManager.GetEntities())
